@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RF-DETR Small • GPU Mobile Phone Detection & ByteTrack Studio</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  
+  <!-- Custom Stylesheet -->
+  <link rel="stylesheet" href="/static/css/style.css">
+</head>
+<body>
+  <div class="app-shell">
+    
+    <!-- Top Navigation & Brand Header -->
+    <header class="app-header">
+      <div class="brand-group">
+        <div class="brand-logo-glow">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+        </div>
+        <div class="brand-text">
+          <h1>RF-DETR <span>STUDIO</span></h1>
+          <p>Real-Time Transformer Mobile Phone Detection & ByteTrack</p>
+        </div>
+      </div>
+
+      <div class="header-badges">
+        <div class="badge badge-gpu">
+          <span class="dot-pulse"></span>
+          <span id="headerGpuBadge">NVIDIA RTX 2060 SUPER</span>
+        </div>
+        <div class="badge badge-codec">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"/>
+            <line x1="7" y1="2" x2="7" y2="22"/>
+            <line x1="17" y1="2" x2="17" y2="22"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+          </svg>
+          <span>NVDEC Decoding • NVENC CQ18</span>
+        </div>
+        <div class="badge badge-status" id="systemStatusBadge">
+          <span class="status-indicator"></span>
+          <span id="systemStatusText">System Ready</span>
+        </div>
+      </div>
+    </header>
+
+    <!-- Main Workspace Grid -->
+    <main class="workspace-grid">
+      
+      <!-- Primary Video Monitoring Viewport -->
+      <section class="viewport-card">
+        
+        <!-- Viewport Top HUD -->
+        <div class="viewport-hud-top">
+          <div class="hud-left">
+            <span class="hud-label">INPUT STREAM:</span>
+            <span class="hud-value" id="hudVideoName">sample.mp4</span>
+            <span class="hud-chip" id="hudResolutionChip">1280x720 • NVDEC</span>
+          </div>
+          <div class="hud-right">
+            <div class="telemetry-pill">
+              <span class="pill-label">FPS</span>
+              <span class="pill-val" id="hudFpsVal">0.0</span>
+            </div>
+            <div class="telemetry-pill">
+              <span class="pill-label">LATENCY</span>
+              <span class="pill-val" id="hudLatencyVal">0.0 ms</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Video Player Display Container -->
+        <div class="player-container" id="playerContainer">
+          
+          <!-- Stream Feed Image / Canvas -->
+          <img id="videoFeed" src="" alt="Real-time Vision Feed" class="feed-screen hidden">
+          
+          <!-- Idle / Offline Placeholder -->
+          <div class="feed-placeholder" id="feedPlaceholder">
+            <div class="placeholder-icon">
+              <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <rect x="2" y="4" width="20" height="16" rx="2"/>
+                <circle cx="8" cy="10" r="2"/>
+                <path d="M21 15l-5-5L5 21"/>
+              </svg>
+            </div>
+            <h3>Vision Stream Idle</h3>
+            <p>Upload a video or click <strong>"Load Sample Video"</strong> to initiate GPU detection.</p>
+            <div class="placeholder-actions">
+              <button class="btn btn-primary" id="btnQuickSample">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="5 3 19 12 5 21 5 3"/>
+                </svg>
+                Load Sample Video
+              </button>
+              <label class="btn btn-secondary" for="videoFileInput">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="17 8 12 3 7 8"/>
+                  <line x1="12" y1="3" x2="12" y2="15"/>
+                </svg>
+                Upload Video
+              </label>
+            </div>
+          </div>
+
+          <!-- Bottom Viewport HUD Overlay (Live Stats Over Video) -->
+          <div class="viewport-hud-bottom" id="viewportOverlay">
+            <div class="overlay-badge phone-count">
+              <span class="badge-icon">📱</span>
+              <span class="badge-text" id="hudActivePhones">0 Phones Active</span>
+            </div>
+            <div class="overlay-badge track-ids">
+              <span class="badge-icon">🏷️</span>
+              <span class="badge-text" id="hudTrackIds">Tracks: None</span>
+            </div>
+            <div class="overlay-badge quality-badge">
+              <span class="badge-icon">⚡</span>
+              <span class="badge-text" id="hudQualityBadge">Lossless-Quality NVENC</span>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Timeline Progress & Scrubber Bar -->
+        <div class="timeline-bar-wrap">
+          <div class="timeline-info">
+            <span id="timelineFrameText">Frame: 0 / 0</span>
+            <span id="timelinePercentText">0.0%</span>
+          </div>
+          <div class="timeline-track">
+            <div class="timeline-fill" id="timelineFill" style="width: 0%;"></div>
+          </div>
+        </div>
+
+        <!-- Master Player Controls Bar -->
+        <div class="player-controls">
+          <div class="controls-left">
+            <button class="btn-ctrl btn-play" id="btnStart" title="Start Detection">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"/>
+              </svg>
+              <span>START</span>
+            </button>
+            <button class="btn-ctrl btn-pause" id="btnPause" title="Pause / Resume" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="6" y="4" width="4" height="16"/>
+                <rect x="14" y="4" width="4" height="16"/>
+              </svg>
+              <span>PAUSE</span>
+            </button>
+            <button class="btn-ctrl btn-stop" id="btnStop" title="Stop Processing" disabled>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+                <rect x="5" y="5" width="14" height="14"/>
+              </svg>
+              <span>STOP</span>
+            </button>
+          </div>
+
+          <div class="controls-center">
+            <div class="status-ticker">
+              <span class="ticker-dot"></span>
+              <span id="statusTickerText">Ready. Choose a video to begin.</span>
+            </div>
+          </div>
+
+          <div class="controls-right">
+            <button class="btn btn-download" id="btnDownload" disabled>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="7 10 12 15 17 10"/>
+                <line x1="12" y1="15" x2="12" y2="3"/>
+              </svg>
+              <span>Download Video</span>
+            </button>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Sidebar Controls & Analytics Deck -->
+      <aside class="sidebar-deck">
+        
+        <!-- Input Video Selection Card -->
+        <div class="deck-card">
+          <div class="card-header">
+            <h3>VIDEO INPUT SOURCE</h3>
+            <span class="card-tag">UI UPLOAD</span>
+          </div>
+          
+          <div class="upload-dropzone" id="dropzone">
+            <input type="file" id="videoFileInput" accept="video/*" class="file-hidden">
+            <div class="dropzone-content">
+              <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                <polyline points="17 8 12 3 7 8"/>
+                <line x1="12" y1="3" x2="12" y2="15"/>
+              </svg>
+              <p><strong>Click to upload</strong> or drag & drop</p>
+              <span class="file-hint">MP4, MOV, AVI, MKV (Any Resolution)</span>
+            </div>
+          </div>
+
+          <div class="video-meta-box" id="videoMetaBox">
+            <div class="meta-row">
+              <span class="meta-key">Active File:</span>
+              <span class="meta-val" id="metaFilename">sample.mp4</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Resolution:</span>
+              <span class="meta-val" id="metaResolution">1280 x 720</span>
+            </div>
+            <div class="meta-row">
+              <span class="meta-key">Frame Rate:</span>
+              <span class="meta-val" id="metaFps">24.0 FPS</span>
+            </div>
+          </div>
+
+          <button class="btn btn-outline" id="btnLoadSampleSide">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M4 12v8a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-8"/>
+              <polyline points="16 6 12 2 8 6"/>
+              <line x1="12" y1="2" x2="12" y2="15"/>
+            </svg>
+            Reload Sample Video
+          </button>
+        </div>
+
+        <!-- RF-DETR Model & Tracking Controls Card -->
+        <div class="deck-card">
+          <div class="card-header">
+            <h3>DETECTION & TRACKING</h3>
+            <span class="card-tag">RF-DETR + BYTETRACK</span>
+          </div>
+
+          <!-- Confidence Threshold Slider -->
+          <div class="slider-control">
+            <div class="slider-header">
+              <label for="confSlider">Confidence Threshold</label>
+              <span class="slider-val" id="confValueDisplay">22%</span>
+            </div>
+            <input type="range" id="confSlider" min="5" max="95" value="22" step="1" class="custom-range">
+            <div class="slider-scale">
+              <span>5% (High Sensitivity)</span>
+              <span>50%</span>
+              <span>95% (Strict)</span>
+            </div>
+          </div>
+
+          <!-- Architecture & Specs Grid -->
+          <div class="specs-grid">
+            <div class="spec-tile">
+              <span class="spec-label">MODEL ARCH</span>
+              <span class="spec-val">RF-DETR Small</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">BACKBONE</span>
+              <span class="spec-val">DINOv2 + NAS</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">PRECISION</span>
+              <span class="spec-val">FP16 Tensor Cores</span>
+            </div>
+            <div class="spec-tile">
+              <span class="spec-label">TRACKER</span>
+              <span class="spec-val">ByteTrack Kalman</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Real-Time Metrics & Telemetry Card -->
+        <div class="deck-card">
+          <div class="card-header">
+            <h3>LIVE GPU TELEMETRY</h3>
+            <span class="card-tag live-tag">LIVE</span>
+          </div>
+
+          <div class="metrics-grid">
+            <div class="metric-box">
+              <div class="metric-top">
+                <span class="metric-title">PROCESSING SPEED</span>
+                <span class="metric-badge">REAL-TIME</span>
+              </div>
+              <div class="metric-main">
+                <span class="metric-number" id="metricFps">0.0</span>
+                <span class="metric-unit">FPS</span>
+              </div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-top">
+                <span class="metric-title">INFERENCE LATENCY</span>
+                <span class="metric-badge">GPU</span>
+              </div>
+              <div class="metric-main">
+                <span class="metric-number" id="metricLatency">0.0</span>
+                <span class="metric-unit">ms</span>
+              </div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-top">
+                <span class="metric-title">PHONES IN FRAME</span>
+                <span class="metric-badge">ACTIVE</span>
+              </div>
+              <div class="metric-main">
+                <span class="metric-number" id="metricActivePhones">0</span>
+                <span class="metric-unit">PHONES</span>
+              </div>
+            </div>
+
+            <div class="metric-box">
+              <div class="metric-top">
+                <span class="metric-title">TOTAL UNIQUE TRACKS</span>
+                <span class="metric-badge">RECORDED</span>
+              </div>
+              <div class="metric-main">
+                <span class="metric-number" id="metricUniqueTracks">0</span>
+                <span class="metric-unit">TRACKS</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Video Quality Assurance Note -->
+          <div class="quality-assurance-box">
+            <div class="qa-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+              </svg>
+            </div>
+            <div class="qa-text">
+              <strong>Quality Preservation Active:</strong>
+              <p>Hardware NVENC (CQ 18) maintains razor-sharp resolution and zero pixel degradation throughout video export.</p>
+            </div>
+          </div>
+
+        </div>
+
+      </aside>
+
+    </main>
+
+  </div>
+
+  <!-- Main JavaScript App Logic -->
+  <script src="/static/js/app.js"></script>
+</body>
+</html>
